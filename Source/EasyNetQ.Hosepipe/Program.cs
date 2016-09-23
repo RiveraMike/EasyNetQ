@@ -78,38 +78,36 @@ namespace EasyNetQ.Hosepipe
 
         public void Start(string[] args)
         {
-            var arguments = argParser.Parse(args);
-
+            
             var parameters = new QueueParameters();
-            arguments.WithKey("s", a => parameters.HostName = a.Value);
-            arguments.WithKey("v", a => parameters.VHost = a.Value);
-            arguments.WithKey("u", a => parameters.Username = a.Value);
-            arguments.WithKey("p", a => parameters.Password = a.Value);
-            arguments.WithKey("o", a => parameters.MessageFilePath = a.Value);
-            arguments.WithKey("q", a => parameters.QueueName = a.Value);
-            arguments.WithTypedKeyOptional<int>("n", a => parameters.NumberOfMessagesToRetrieve = int.Parse(a.Value))
-                .FailWith(messsage("Invalid number of messages to retrieve"));
-            arguments.WithTypedKeyOptional<bool>("x", a => parameters.Purge = bool.Parse(a.Value))
-                .FailWith(messsage("Invalid purge (x) parameter"));            
+            parameters.HostName = "localhost";
+            parameters.Username = "guest";
+            parameters.Password = "guest";
+            parameters.MessageFilePath = "C:\\temp\\messages";
+            //arguments.WithTypedKeyOptional<int>("n", a => parameters.NumberOfMessagesToRetrieve = int.Parse(a.Value))
+            //    .FailWith(messsage("Invalid number of messages to retrieve"));
+            //arguments.WithTypedKeyOptional<bool>("x", a => parameters.Purge = bool.Parse(a.Value))
+            //    .FailWith(messsage("Invalid purge (x) parameter"));            
 
             try
             {
-                arguments.At(0, "dump", () => arguments.WithKey("q", a => 
-                {
-                    parameters.QueueName = a.Value;
-                    Dump(parameters);
-                }).FailWith(messsage("No Queue Name given")));
+                //arguments.At(0, "dump", () => arguments.WithKey("q", a => 
+                //{
+                //    parameters.QueueName = a.Value;
+                //    Dump(parameters);
+                //}).FailWith(messsage("No Queue Name given")));
 
-                arguments.At(0, "insert", () => Insert(parameters));
+                //arguments.At(0, "insert", () => Insert(parameters));
+                Retry(parameters);
 
-                arguments.At(0, "err", () => ErrorDump(parameters));
+                //arguments.At(0, "err", () => ErrorDump(parameters));
 
-                arguments.At(0, "retry", () => Retry(parameters));
+                //arguments.At(0, "retry", () => Retry(parameters));
 
-                arguments.At(0, "?", PrintUsage);
+                //arguments.At(0, "?", PrintUsage);
 
-                // print usage if there are no arguments
-                arguments.At(0, a => {}).FailWith(PrintUsage);
+                //// print usage if there are no arguments
+                //arguments.At(0, a => {}).FailWith(PrintUsage);
             }
             catch (EasyNetQHosepipeException easyNetQHosepipeException)
             {

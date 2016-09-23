@@ -6,6 +6,7 @@ using EasyNetQ.Producer;
 using EasyNetQ.Topology;
 using System.Linq;
 using EasyNetQ.Internals;
+using EasyNetQ.SystemMessages;
 
 namespace EasyNetQ
 {
@@ -177,6 +178,45 @@ namespace EasyNetQ
                         }
                     });
             return new SubscriptionResult(exchange, queue, consumerCancellation);
+        }
+
+        public virtual ISubscriptionResult SubscribeAsyncError<T>(string subscriptionId, Func<Error, Task> onMessage) where T : class
+        {
+            return SubscribeAsyncError<T>(subscriptionId, onMessage, x => { });
+        }
+
+        public virtual ISubscriptionResult SubscribeAsyncError<T>(string subscriptionId, Func<Error, Task> onMessage, Action<ISubscriptionConfiguration> configure) where T : class
+        {
+            Preconditions.CheckNotNull(subscriptionId, "subscriptionId");
+            Preconditions.CheckNotNull(onMessage, "onMessage");
+            Preconditions.CheckNotNull(configure, "configure");
+
+            var configuration = new SubscriptionConfiguration(connectionConfiguration.PrefetchCount);
+            configure(configuration);
+
+            //var queue = advancedBus.QueueDeclare("EasyNetQ_Default_Error_Queue", autoDelete: configuration.AutoDelete, expires: configuration.Expires, maxPriority: configuration.MaxPriority);
+            var queue = new Queue("EasyNetQ_Default_Error_Queue", false);
+            //var exchange = advancedBus.ExchangeDeclare("ErrorExchange_", ExchangeType.Topic);
+
+            //foreach (var topic in configuration.Topics.DefaultIfEmpty("#"))
+            //{
+            //    advancedBus.Bind(exchange, queue, topic);
+            //}
+
+            var consumerCancellation = advancedBus.Consume<Error>(
+                queue,
+                (message, messageReceivedInfo) => onMessage(message.Body),
+                x =>
+                {
+                    x.WithPriority(configuration.Priority)
+                     .WithCancelOnHaFailover(configuration.CancelOnHaFailover)
+                     .WithPrefetchCount(configuration.PrefetchCount);
+                    if (configuration.IsExclusive)
+                    {
+                        x.AsExclusive();
+                    }
+                });
+            return null;
         }
 
         public virtual TResponse Request<TRequest, TResponse>(TRequest request)

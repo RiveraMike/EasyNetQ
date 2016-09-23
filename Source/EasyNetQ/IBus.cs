@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using EasyNetQ.Consumer;
 using EasyNetQ.FluentConfiguration;
 using EasyNetQ.Producer;
+using EasyNetQ.SystemMessages;
 
 namespace EasyNetQ
 {
@@ -158,6 +159,11 @@ namespace EasyNetQ
         /// </returns>
         ISubscriptionResult SubscribeAsync<T>(string subscriptionId, Func<T, Task> onMessage, Action<ISubscriptionConfiguration> configure) 
             where T : class;
+
+        ISubscriptionResult SubscribeAsyncError<T>(string subscriptionId, Func<Error, Task> onMessage,
+            Action<ISubscriptionConfiguration> configure) where T : class;
+
+        ISubscriptionResult SubscribeAsyncError<T>(string subscriptionId, Func<Error, Task> onMessage) where T : class;
 
         /// <summary>
         /// Makes an RPC style request
